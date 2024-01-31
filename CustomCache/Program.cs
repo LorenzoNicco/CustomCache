@@ -1,4 +1,4 @@
-﻿var dataDownloader = new SlowDataDownloader();
+﻿IDataDownloader dataDownloader = new CachingDataDownloader(new SlowDataDownloader());
 
 Console.WriteLine(dataDownloader.DownloadData("id1"));
 Console.WriteLine(dataDownloader.DownloadData("id2"));
@@ -32,6 +32,27 @@ public class Cache<TKey, TData>
     }
 }
 
+//CLASSE PER DOWNLOAD CON CACHE SECONDO DECORATOR DESIGN PATTERN
+public class CachingDataDownloader : IDataDownloader
+{
+    //Creiamo un'istanza dell'interfaccia oggetto da "decorare"
+    private readonly IDataDownloader _dataDownloader;
+    //Creiamo un'istanza della classe cache
+    private readonly Cache<string, string> _cache = new();
+
+    //Costruttore
+    public CachingDataDownloader(IDataDownloader dataDownloader)
+    {
+        _dataDownloader = dataDownloader;
+    }
+
+    //Mmetodo per effettuare il fake download con la cache
+    public string DownloadData(string resourceId)
+    {
+        return _cache.Get(resourceId, _dataDownloader.DownloadData);
+    }
+}
+
 //INTERFACCIA PER IL FAKE DOWNLOAD
 public interface IDataDownloader
 {
@@ -41,17 +62,8 @@ public interface IDataDownloader
 //CLASSE PER IL FAKE DOWNLOAD
 public class SlowDataDownloader : IDataDownloader
 {
-    //Creiamo un'istanza della classe cache
-    private readonly Cache<string, string> _cache = new();
-
-    //Mmetodo per effettuare il fake download con la possibilità di cache
-    public string DownloadData(string resourceId)
-    {
-        return _cache.Get(resourceId, DownloadDataWithoutCaching);
-    }
-
     //metodo per effettuare il fake download
-    private string DownloadDataWithoutCaching(string resourceId)
+    public string DownloadData(string resourceId)
     {
         //Il programma viene fermato per 1 secondo prima di "scaricare" i dati
         Thread.Sleep(1000);

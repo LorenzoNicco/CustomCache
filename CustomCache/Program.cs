@@ -41,7 +41,17 @@ public interface IDataDownloader
 //CLASSE PER IL FAKE DOWNLOAD
 public class SlowDataDownloader : IDataDownloader
 {
+    //Creiamo un'istanza della classe cache
+    private readonly Cache<string, string> _cache = new();
+
+    //Mmetodo per effettuare il fake download con la possibilità di cache
     public string DownloadData(string resourceId)
+    {
+        return _cache.Get(resourceId, DownloadDataWithoutCaching);
+    }
+
+    //metodo per effettuare il fake download
+    private string DownloadDataWithoutCaching(string resourceId)
     {
         //Il programma viene fermato per 1 secondo prima di "scaricare" i dati
         Thread.Sleep(1000);
